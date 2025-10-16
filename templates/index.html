@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+{% block content %}
+
+<!-- Onglet 1 : Meta Indicateurs -->
+<div id="tab-meta" class="tab-content active">
+  <div class="plot">
+    <div class="top-filters">
+      <div>
+        <label>Granularité :</label>
+        <select id="granularity">
+          <option value="mois"selected>Mois</option>
+          <option value="année">Année</option>
+        </select>
+      </div>
+      <div>
+        <label>Type de graphique :</label>
+        <select id="graph_type">
+          <option value="courbe">Courbe</option>
+          <option value="barres">Barres</option>
+        </select>
+      </div>
+      <div>
+        <label>Lissage :</label>
+        <select id="smoothing">
+          <option value="0">Aucun</option>
+          <option value="2">2 semaines</option>
+          <option value="4">4 semaines</option>
+          <option value="6">6 semaines</option>
+          <option value="8">8 semaines</option>
+          <option value="10">10 semaines</option>
+          <option value="12">12 semaines</option>
+          <option value="14">14 semaines</option>
+          <option value="16">16 semaines</option>
+          <option value="20">20 semaines</option>
+          <option value="26">26 semaines</option>
+          <option value="52">52 semaines</option>
+        </select>
+      </div>
+    </div>
+    <br>
+    <div id="loading-message-meta" class="loading message">
+      <span class="loader"></span>
+      Votre graphique se prépare, merci de patienter quelques instants…
+    </div>
+    <div id="plot"></div>
+    <div id="brand-lift-values" style="text-align: center; margin-top: 10px;"></div>
+    <div class="button-group">
+      <button id="download" class="download-btn">Télécharger le graphique (image)</button>
+      <button id="download-plot-data" class="download-btn">Télécharger les données du graphique (Excel)</button>
+      <button id="download-intermediate-data" class="download-btn">Télécharger les données intermédiaires (Excel)</button>
+    </div>
+    <div class="variable-buttons">
+      <p style="font-weight:bold;">Choisissez une variable :</p>
+      <div id="variable-buttons" style="display: flex; gap: 10px; flex-wrap: wrap;">
+        <button class="var-btn" data-variable="Aware">Aware</button>
+        <button class="var-btn" data-variable="Discover">Discover</button>
+        <button class="var-btn" data-variable="Ad awareness">Ad awareness</button>
+        <button class="var-btn" data-variable="Prefer">Prefer</button>
+        <button class="var-btn" data-variable="Good opinion">Good opinion</button>
+        <button class="var-btn" data-variable="Consider">Consider</button>
+        <button class="var-btn" data-variable="Clients">Clients</button>
+        <button class="var-btn" data-variable="Recommend">Recommend</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Onglet 2 : Purchase Funnel -->
+<div id="tab-purchase-funnel" class="tab-content" style="display: none;">
+  <div class = "tab-header">
+    <h2>Tableau Purchase Funnel</h2>
+    <p class = "tab-subtext">
+      Survolez le bouton d'information pour afficher le taux de passage.
+    </p>
+  </div>
+  <div id="loading-message-funnel" class="loading message">
+    <span class="loader"></span>
+    Votre tableau arrive, encore un petit instant…
+  </div>
+  <div id="funnel-table" class="card"></div>
+</div>
+
+<!-- Onglet 3 : Correlations -->
+<div id="tab-correlations" class="tab-content" style="display: none;">
+  <div class = "tab-header">
+  <h2>Matrice de Corrélation</h2>
+  <p class = "tab-subtext">
+    Sélectionnez les marques et la période, puis cliquez sur "Générer" pour voir comment les indicateurs sont liés.
+  </p>
+</div>
+  <div id="loading-message-corr" class="loading message">
+    <span class="loader"></span> Calcul des corrélations en cours, merci de patienter...
+  </div>
+  <div id="correlation-plot" class="card"></div>
+  <div id="correlation-table"></div>
+</div>
+
+<!-- Onglet 4 : SEM -->
+<div id="tab-sem" class="tab-content" style="display: none;">
+  <div class = "tab-header">
+    <h2>Analyse des Contributions : SEM</h2>
+  <p class = "tab-subtext">
+    Les analyses de contribution permettent de définir l'apport des indicateurs du funnel à la<br>consideration (ou selon le KPI sélectionné). 
+    Sur une base 100 on définit la contribution de<br>chaque indicateur à la croissance de l'indicateur sélectionné.
+  </p>
+</div>
+<div id="sem-loading" class="loading message">
+  <span class="loader"></span> Modélisation en cours...
+</div>
+<div id="sem-results"></div>
+</div>
+
+{% endblock %}

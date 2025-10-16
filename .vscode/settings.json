@@ -1,0 +1,4 @@
+{
+    "appService.defaultWebAppToDeploy": "/subscriptions/85d75f26-582d-4605-ac92-fcc48e38b41b/resourceGroups/DYA_group/providers/Microsoft.Web/sites/DYA",
+    "appService.deploySubpath": "."
+}

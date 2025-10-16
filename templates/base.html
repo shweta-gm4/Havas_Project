@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>DYA - Meta Indicateurs</title>
+  <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <!-- Ajout Cytoscape -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/cytoscape/3.25.0/cytoscape.min.js"></script>
+</head>
+<body>
+  <div class="header">
+    <img src="{{ url_for('static', filename='logo.png') }}" alt="Logo" class="header-logo">
+    <div class="header-title">DYA</div>
+  </div>
+
+  <div class="tabs"> 
+    <button class="tab-btn active" data-tab="tab-meta"
+    title = "Diagnotisc de la santé d'une marque vs la concurrence">
+    Meta Indicateurs
+    </button>
+
+    <button class="tab-btn" data-tab="tab-purchase-funnel"
+    title = "Visualisation des Funnels de marque et des taux de passage">
+    Purchase Funnel
+  </button>
+
+    <button class="tab-btn" data-tab="tab-correlations"
+    title = "Force de la relation entre les variables">
+    Correlations
+  </button>
+
+    <button class="tab-btn" data-tab="tab-sem"
+    title = "Analyse des drivers par modélisation SEM">
+      SEM
+    </button>
+  </div>
+
+  <div class="page-container">
+    <div class="filters">
+      <label>Agence :</label>
+      <select id="agency">
+        {% for agency in agencies %}
+        <option value="{{ agency }}">{{ agency }}</option>
+        {% endfor %}
+      </select>
+
+      <label>Client :</label>
+      <select id="client">
+        {% for client in clients %}
+        <option value="{{ client }}">{{ client }}</option>
+        {% endfor %}
+      </select>
+
+      <label>Audiences :</label>
+      <select id="audiences" class="select2" multiple style="width: 100%;"></select>
+      <p id="respondent-count"></p>
+
+      <label>Catégorie :</label>
+      <select id="category">
+        <option value="">-- Toutes --</option>
+        {% for category in categories %}
+        <option value="{{ category }}">{{ category }}</option>
+        {% endfor %}
+      </select>
+
+      <label>Marque :</label>
+      <select id="brand" class="select2" multiple style="width: 100%;"></select>
+
+      <div class="dates-group">
+        <label>Date début :</label>
+        <input type="date" id="start_date">
+
+        <label style="margin-top:10px;">Date fin :</label>
+        <input type="date" id="end_date">
+      </div>
+      <label> Variable KPI (SEM) :</label>
+      <select id = 'sem-variable' style = 'width: 100%'>
+        <option value = 'Aware' selected>Aware</option>
+        <option value = 'Discover'>Discover</option>
+        <option value = 'Ad awareness'>Ad awareness</option>
+        <option value = 'Prefer'>Prefer</option> 
+        <option value = 'Good opinion'>Good opinion</option>
+        <option value = 'Consider'>Consider</option>
+        <option value = 'Clients'>Clients</option>
+        <option value = 'Recommend'>Recommend</option>
+      </select>
+      <button id="submit">Générer</button>
+    </div>
+    {% block content %}{% endblock %}
+  </div>
+  <script src="{{ url_for('static', filename='main.js') }}"></script>
+</body>
+</html>
