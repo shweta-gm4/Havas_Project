@@ -157,7 +157,7 @@ def get_respondents():
     """
     df = run_query(panelist_query)
     return jsonify({'count': len(df), 'panelists': df['panelist_id'].tolist()})
-
+''
 @app.route('/get_brands_variables', methods=['POST'])
 def get_brands_variables():
     data = request.get_json(force=True)
