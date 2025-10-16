@@ -1,4 +1,4 @@
-from unittest import result
+
 from flask import Flask, render_template, request, jsonify, Response
 from dotenv import load_dotenv
 from google.cloud import bigquery
@@ -30,15 +30,6 @@ if not creds_json:
 creds_info = json.loads(creds_json)
 credentials = Credentials.from_authorized_user_info(
     creds_info, scopes=["https://www.googleapis.com/auth/cloud-platform"])
-
-'''
-KEY_FILE = r"C:\Users\shweta.ann-george\OneDrive - Havas\Bureau\Projet_Havas\DraftDYA\config\google-credentials.json"
-
-with open (KEY_FILE, "r") as f:
-    creds_info = json.load(f)
-
-credentials = Credentials.from_authorized_user_info(creds_info, scopes=["https://www.googleapis.com/auth/cloud-platform"]) 
-'''
 
 app = Flask(__name__)
 
@@ -157,7 +148,7 @@ def get_respondents():
     """
     df = run_query(panelist_query)
     return jsonify({'count': len(df), 'panelists': df['panelist_id'].tolist()})
-''
+
 @app.route('/get_brands_variables', methods=['POST'])
 def get_brands_variables():
     data = request.get_json(force=True)
