@@ -19,7 +19,7 @@ plt.show()
 fig1.savefig('load_vs_length.png')
 fig1.savefig('load_vs_length.pdf')
 plt.close(fig1)
-
+from unittest import result
 
 import math 
 
@@ -70,3 +70,11 @@ if __name__ == "__main__":
         
 
         
+'''
+KEY_FILE = r"C:\Users\shweta.ann-george\OneDrive - Havas\Bureau\Projet_Havas\DraftDYA\config\google-credentials.json"
+
+with open (KEY_FILE, "r") as f:
+    creds_info = json.load(f)
+
+credentials = Credentials.from_authorized_user_info(creds_info, scopes=["https://www.googleapis.com/auth/cloud-platform"]) 
+'''
