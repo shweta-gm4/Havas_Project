@@ -17,6 +17,7 @@ $(document).ready(function () {
     let panelistIDs = [];
     let selectedVariable = '';
 
+    let lastMetaData = null;
     let lastSEMResult = null;
     let selectedKpi = $('#sem-variable').val();
     $('#sem-variable').on('change',function (){
@@ -51,18 +52,12 @@ $(document).ready(function () {
 
 
     function renderMeta(metaData) {
+        lastMetaData = metaData;
         const fig = JSON.parse(metaData.plot);
         Plotly.newPlot('plot', fig.data, fig.layout);
 
         console.log(metaData);
-
-        if (metaData.brand_lift) {
-            let html = '<p style="font-weight:bold;">Brand Lift :</p>';
-            Object.entries(metaData.brand_lift).forEach(([brand, lift]) => {
-               html += `<p>${brand} : ${lift ?? 'n/a'}</p>`;
-            });
-            $('#brand-lift-values').html(html); 
-        }
+        $('#brand-lift-values').html('<p style="text-align:center; color:#888;">Chargement du tableau...</p>');
     }
 
     function renderPurchaseFunnel(funnelData) {
@@ -278,6 +273,10 @@ $(document).ready(function () {
     function updateGraph() {
         if (!selectedVariable) return;
         $('#loading-message-meta').show();
+
+        const granularity = $('#granularity').val();
+        const smoothingValue = (granularity === 'mois' || granularity === 'année') ? 0 : $('#smoothing').val();
+
         const payload = {
             client: $('#client').val(),
             audiences: $('#audiences').val(),
@@ -287,15 +286,15 @@ $(document).ready(function () {
             end_date: $('#end_date').val(),
             granularity: $('#granularity').val(),
             graph_type: $('#graph_type').val(),
-            smoothing: $('#smoothing').val()
+            smoothing: smoothingValue
         };
-        $.post('/generate', JSON.stringify(payload), function (res) {
-            const fig = JSON.parse(res.meta.plot);
+        $.post('/meta_indicators', JSON.stringify(payload), function (res) {
+            const fig = JSON.parse(res.plot); //changed meta here
             Plotly.newPlot('plot', fig.data, fig.layout).then(() => {
                 const liftDiv = $('#brand-lift-values');
                 liftDiv.empty();
 
-                if (res.meta.brand_lift && Object.keys(res.meta.brand_lift).length > 0) {
+                if (res.brand_lift && Object.keys(res.brand_lift).length > 0) { //changed meta here
                     let html = '<p style="font-weight:bold;">Brand Lift et Moyennes par marque :</p>';
                     html += '<table style="margin: 0 auto; border-collapse: collapse; border: 1px solid black;">';
                     html += '<thead><tr>';
@@ -306,7 +305,7 @@ $(document).ready(function () {
                     html += '<th style="border:1px solid black; padding:5px;">Fin (%)</th>';
                     html += '</tr></thead><tbody>';
 
-                    Object.entries(res.meta.brand_lift)
+                    Object.entries(res.brand_lift) //changed meta here
                     .sort(([,a], [,b]) => (b ?? -Infinity) - (a ?? -Infinity))
                     .forEach(([brand, lift]) => {
                         const liftText = (lift === null) ? '<i>Donnée insuffisante</i>' : `${lift > 0 ? '+' : ''}${lift.toFixed(2)}`;
@@ -314,10 +313,10 @@ $(document).ready(function () {
                         if ($('#brand').val().length === 1) {
                             avgBrand = $('#average-respondents').text().match(/Moyenne\s*:\s*([\d.,]+)/);
                             avgBrand = avgBrand ? avgBrand[1] : '-';
-                        } else if (res.meta.avg_by_brand && res.meta.avg_by_brand[brand]) {
-                            avgBrand = res.meta.avg_by_brand[brand];
+                        } else if (res.avg_by_brand && res.avg_by_brand[brand]) { //changed meta here
+                            avgBrand = res.avg_by_brand[brand]; //changed meta here
                         }
-                        const se = (res.meta.brand_start_end && res.meta.brand_start_end[brand]) || {};
+                        const se = (res.brand_start_end && res.brand_start_end[brand]) || {}; //changed meta here
                         const startVal = (se.start !== undefined && se.start !== null) ? se.start.toFixed(2) + '%' : '-';
                         const endVal = (se.end !== undefined && se.end !== null) ? se.end.toFixed(2) + '%' : '-';
                         html += `<tr>`;
@@ -399,10 +398,36 @@ $(document).ready(function () {
     }
 
     $('#graph_type, #smoothing, #granularity').on('change', function () {
+        const graphType = $('#graph_type').val();
+        const granularity = $('#granularity').val();
+
+        if (!lastMetaData ) {
+            updateGraph(); //fallback to full update if no cached data
+            return;
+        }
+
+        const fig = JSON.parse(lastMetaData.plot); 
+
+        fig.data.forEach(trace => {
+            if (graphType === 'barres') {
+                trace.type = 'bar';
+                delete trace.mode;
+                delete trace.line;
+            } else {
+                trace.type = 'scatter';
+            }
+        });
+        fig.layout.xaxis.tickformat = granularity === 'année' ? '%Y-%m' : '%Y-%m-%d';
+
+        Plotly.react('plot', fig.data, fig.layout);
+
+        /*
         if (selectedVariable) {
             updateRespondentsInfo();
             updateGraph();
         }
+        */
+        
     });
 
     $('#agency').on('change', function () {
@@ -557,6 +582,7 @@ $(document).ready(function () {
                 data: JSON.stringify(payload)
             });
             renderMeta(metaRes);
+            updateGraph();
             $('#loading-message-meta').hide();
 
             // STEP 2: Purchase Funnel
@@ -620,10 +646,7 @@ $(document).ready(function () {
                 $('#loading-message-meta, #loading-message-funnel, #loading-message-corr, #sem-loading').hide();
             }
     });
-        ///error: function (xhr) {
-            ///$('#loading-message-meta, #loading-message-funnel, #loading-message-corr, #sem-loading').hide();
-            ///alert("Erreur lors du calcul : " + (xhr.responseJSON?.error || "inconnue"));}
-        
+
 
     // INIT : Tab 1 par défaut
     $('#tab-meta').show();

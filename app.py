@@ -19,6 +19,7 @@ load_dotenv()
 logging.basicConfig(level=logging.DEBUG, format="%(asctime)s %(levelname)s: %(message)s")
 
 
+       
 # Suppression de GOOGLE_APPLICATION_CREDENTIALS s'il est défini
 if "GOOGLE_APPLICATION_CREDENTIALS" in os.environ:
     del os.environ["GOOGLE_APPLICATION_CREDENTIALS"]
@@ -30,6 +31,7 @@ if not creds_json:
 creds_info = json.loads(creds_json)
 credentials = Credentials.from_authorized_user_info(
     creds_info, scopes=["https://www.googleapis.com/auth/cloud-platform"])
+
 
 app = Flask(__name__)
 
@@ -386,13 +388,18 @@ def meta_analysis (client_val, audiences, brands, selected_variable, start_date,
         fig = go.Figure()
         fig.update_layout(title='Pas de données', xaxis_title='Date', yaxis_title='Pourcentage')
         return ({'plot': pio.to_json(fig)})
+    
+    df_pct['period'] = pd.to_datetime(df_pct['period'], errors='coerce').dt.strftime('%Y-%m-%dT%H:%M:%S')
 
     fig = go.Figure()
-    for brand in brands:
+    for idx, brand in enumerate(brands):
         brand_df = df_pct[df_pct['brand_name'] == brand]
         if brand_df.empty:
             continue
-        y_data = brand_df['percentage'].rolling(window=smoothing, min_periods=1).mean() if smoothing > 0 else brand_df['percentage']
+        if granularity in ['mois', 'année'] or smoothing == 0:
+            y_data = brand_df['percentage']
+        else:
+            y_data = brand_df['percentage'].rolling(window=smoothing, min_periods=1).mean() if smoothing > 0 else brand_df['percentage']
 
         trace = go.Scatter(
             x=brand_df['period'],
@@ -407,38 +414,45 @@ def meta_analysis (client_val, audiences, brands, selected_variable, start_date,
         )
         fig.add_trace(trace)
 
+        ## Add start and end labels
         if len(brand_df) >= 2: 
             start_x, start_y = brand_df['period'].iloc[0], y_data.iloc[0]
             end_x, end_y = brand_df['period'].iloc[-1], y_data.iloc[-1]
 
+            #slight vertical offset to prevent overlap with markers
+            y_offset = (idx - len(brands)/2) * 0.3
+
+            # Dynamic label placement 
+            start_pos = 'bottom center'
+            end_pos = 'top center' if end_y >= start_y else 'bottom center'
+            
             fig.add_trace(go.Scatter(
                 x=[start_x, end_x],
-                y=[start_y, end_y],
+                y=[start_y + y_offset, end_y + y_offset],
                 mode='markers+text',
                 text=[f"{start_y:.1f}%", f"{end_y:.1f}%"],
-                textposition=['bottom right', 'top left'],
-                textfont=dict(color='black', size=12),
+                textposition=[start_pos, end_pos],
+                textfont=dict(color='black', size=11),
                 showlegend=False,
             ))
-
-    min_date = df_pct['period'].min()
-    max_date = df_pct['period'].max()
-
-    fig.update_xaxes(type='date')
 
     fig.update_layout(
         title=f"Évolution de {selected_variable}",
         xaxis_title='Date',
         yaxis_title='Pourcentage',
         legend_title='Marques',
+        margin = dict(l=80, r=80, t=80, b=80),
         xaxis=dict(
             type='date',
-            range=[min_date.isoformat(), max_date.isoformat()],
-            tickformat='%Y-%m-%d'
-        )
+            tickformat='%Y-%m-%d', 
+            showgrid=True, 
+            zeroline=True
+        ), 
+        yaxis=dict(showgrid=True),
+        template='plotly_white',
     )
 
-    df_pct['period'] = pd.to_datetime(df_pct['period'])
+    #df_pct['period'] = pd.to_datetime(df_pct['period'])
 
     return {
         'plot': pio.to_json(fig),
@@ -485,7 +499,7 @@ def download_plot_data():
     granularity = data['granularity']
     smoothing = int(data['smoothing'])
 
-    _, df_pct, _, _, _, _ = get_graph_data(client_val, audiences, brands, selected_variable, start_date, end_date, granularity)
+    _, df_pct, _, _, _, _, _ = get_graph_data(client_val, audiences, brands, selected_variable, start_date, end_date, granularity)
     if df_pct is None or df_pct.empty:
         return jsonify({'error': 'Pas de données'}), 400
 
@@ -514,7 +528,7 @@ def download_intermediate_data():
     end_date = data['end_date']
     granularity = data['granularity']
 
-    df_intermediate, _, _, _, _, _ = get_graph_data(client_val, audiences, brands, selected_variable, start_date, end_date, granularity)
+    df_intermediate, _, _, _, _, _, _ = get_graph_data(client_val, audiences, brands, selected_variable, start_date, end_date, granularity)
     if df_intermediate is None or df_intermediate.empty:
         return jsonify({'error': 'Pas de données'}), 400
 

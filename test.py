@@ -68,8 +68,6 @@ if __name__ == "__main__":
 
 
         
-
-        
 '''
 KEY_FILE = r"C:\Users\shweta.ann-george\OneDrive - Havas\Bureau\Projet_Havas\DraftDYA\config\google-credentials.json"
 
